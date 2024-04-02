@@ -2,27 +2,32 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import '../styles.css';
 
-const Register = ({ onRegister }) => {
-  const [id, setId] = useState('');
+const Register = ({ onRegisterSuccess }) => {
+  const [loginId, setId] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [gender, setGender] = useState('');
   const [birth, setBirth] = useState('');
 
+  const handleGenderChange = (e) => {
+    setGender(e.target.value);
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:8080/member/signup', {
-        id,
+      const response = await axios.post('http://localhost:8080/signup', {
+        loginId,
         password,
         name,
         email,
         gender,
         birth
       });
-      // 회원가입에 성공한 경우 상태를 업데이트합니다.
-      onRegister(response.data);
+      if (response.status === 200) {
+        onRegisterSuccess(response.status);
+      }
     } catch (error) {
       console.error('회원가입 에러:', error);
     }
@@ -37,7 +42,7 @@ const Register = ({ onRegister }) => {
             <label>Id:</label>
             <input
               type="text"
-              value={id}
+              value={loginId}
               onChange={(e) => setId(e.target.value)}
             />
           </div>
@@ -66,13 +71,13 @@ const Register = ({ onRegister }) => {
             />
           </div>
           <div>
-            <label>Gender:</label>
-            <input
-              type="text"
-              value={gender}
-              onChange={(e) => setGender(e.target.value)}
-            />
-          </div>
+        <label>Gender:</label>
+          <select value={gender} onChange={handleGenderChange}>
+            <option value="">Select Gender</option>
+            <option value="F">Female</option>
+            <option value="M">Male</option>
+          </select>
+      </div>
           <div>
             <label>Birth:</label>
             <input

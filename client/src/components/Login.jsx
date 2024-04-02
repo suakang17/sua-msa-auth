@@ -2,21 +2,23 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import '../styles.css';
 
-const Login = ({ onLogin }) => {
-  const [id, setId] = useState('');
+const Login = ({ onLoginHandle }) => {
+  const [loginId, setId] = useState('');
   const [password, setPassword] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:8080/member/login', {
-        id,
+      const response = await axios.post('http://localhost:8080/login', {
+        loginId,
         password,
       });
-      // 로그인에 성공한 경우 상태를 업데이트합니다.
-      onLogin(response.data);
+      if (response.status === 200) {
+        onLoginHandle(response.data.role);
+      }
     } catch (error) {
       console.error('로그인 에러:', error);
+      onLoginHandle(false);
     }
   };
 
@@ -29,7 +31,7 @@ const Login = ({ onLogin }) => {
             <label>Id:</label>
             <input
               type="text"
-              value={id}
+              value={loginId}
               onChange={(e) => setId(e.target.value)}
             />
           </div>

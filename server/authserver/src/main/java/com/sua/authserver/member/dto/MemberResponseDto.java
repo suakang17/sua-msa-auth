@@ -23,4 +23,5 @@ public class MemberResponseDto {
     public void clearPassword() {
         this.password = "";
     }
+
 }

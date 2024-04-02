@@ -6,12 +6,13 @@ import Main from './components/Main';
 import './styles.css';
 
 const App = () => {
+  
   return (
     <div className='App'>
         <Routes>
           <Route path="/login" element={ <Login/> } />
-          <Route path="/signup" element={ <SignUp/> } />
-          <Route path="/" element={ <Main/> } />
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/main" element={ <Main/> } />
         </Routes>
     </div>
   );

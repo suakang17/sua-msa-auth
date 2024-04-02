@@ -28,7 +28,7 @@ public class AuthFilterConfig {
                 FilterRegistrationBean<>();
         filterRegistrationBean.setFilter(new VerifyMemberFilter(memberService, mapper));
         filterRegistrationBean.setOrder(1);
-        filterRegistrationBean.addUrlPatterns("/member/login");
+        filterRegistrationBean.addUrlPatterns("/login");
         return filterRegistrationBean;
     }
 
@@ -38,7 +38,7 @@ public class AuthFilterConfig {
                 FilterRegistrationBean<>();
         filterRegistrationBean.setFilter(new JwtFilter(provider, memberService , mapper));
         filterRegistrationBean.setOrder(2);
-        filterRegistrationBean.addUrlPatterns("/member/login");
+        filterRegistrationBean.addUrlPatterns("/login");
         return filterRegistrationBean;
     }
 
@@ -48,7 +48,7 @@ public class AuthFilterConfig {
                 FilterRegistrationBean<>();
         filterRegistrationBean.setFilter(new JwtAuthorizationFilter(provider,mapper));
         filterRegistrationBean.setOrder(2);
-        filterRegistrationBean.addUrlPatterns("/member/login");
+        filterRegistrationBean.addUrlPatterns("/login");
         return filterRegistrationBean;
     }
 }
