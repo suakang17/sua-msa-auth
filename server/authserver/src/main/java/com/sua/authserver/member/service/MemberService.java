@@ -103,12 +103,12 @@ public class MemberService {
     }
 
     public MemberResponseDto findMemberByEmail(String MemberEmail) {
-        return converter.convert(memberRepository.findByMemberEmail(MemberEmail));
+        return converter.convert(memberRepository.findByEmail(MemberEmail));
     }
 
     @Transactional
     public void updateRefreshToken(String MemberEmail, String refreshToken) {
-        Member member = memberRepository.findByMemberEmail(MemberEmail);
+        Member member = memberRepository.findByEmail(MemberEmail);
         if (member == null)
             return;
         member.updateRefreshToken(refreshToken);
@@ -138,7 +138,7 @@ public class MemberService {
 
 //    @Transactional
 //    public boolean addMemberRole(String email, Role role) {
-//        Member member = memberRepository.findByMemberEmail(email);
+//        Member member = memberRepository.findByEmail(email);
 //        if (member.getMemberRoles().stream().anyMatch(memberRole -> memberRole.getRole().equals(role)))
 //            return false;
 //        MemberRole memberRole = MemberRole.builder()
