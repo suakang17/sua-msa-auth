@@ -14,10 +14,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@RequestMapping("/member")
 @RequiredArgsConstructor
 @Slf4j
 public class MemberController {
     private final MemberService memberService;
+
+    @GetMapping
+    public ResponseEntity<String> mainPage() {
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
 
     @PostMapping("/signup")
     @ResponseBody

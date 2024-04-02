@@ -17,7 +17,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Configuration
 public class AuthFilterConfig {
 
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -49,6 +48,7 @@ public class AuthFilterConfig {
                 FilterRegistrationBean<>();
         filterRegistrationBean.setFilter(new JwtAuthorizationFilter(provider,mapper));
         filterRegistrationBean.setOrder(2);
+        filterRegistrationBean.addUrlPatterns("/member/login");
         return filterRegistrationBean;
     }
 }

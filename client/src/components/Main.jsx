@@ -7,7 +7,8 @@ import axios from 'axios';
 
 const Main = () => {
   useEffect(() => {
-    axios.get('http://localhost:8080')
+    axios.get('http://localhost:8080/member')
+    .then(console.log("connected localhost:8080/member"))
     .catch(error => console.log(error))
   }, []);
 

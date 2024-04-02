@@ -3,14 +3,14 @@ import axios from 'axios';
 import '../styles.css';
 
 const Login = ({ onLogin }) => {
-  const [username, setUsername] = useState('');
+  const [id, setId] = useState('');
   const [password, setPassword] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:8080/login', {
-        username,
+      const response = await axios.post('http://localhost:8080/member/login', {
+        id,
         password,
       });
       // 로그인에 성공한 경우 상태를 업데이트합니다.
@@ -26,11 +26,11 @@ const Login = ({ onLogin }) => {
         <h2>Login</h2>
         <form onSubmit={handleSubmit}>
           <div>
-            <label>Username:</label>
+            <label>Id:</label>
             <input
               type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={id}
+              onChange={(e) => setId(e.target.value)}
             />
           </div>
           <div>
