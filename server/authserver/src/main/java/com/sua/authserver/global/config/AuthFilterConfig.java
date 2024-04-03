@@ -1,6 +1,7 @@
 package com.sua.authserver.global.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sua.authserver.global.filter.CorsFilter;
 import com.sua.authserver.global.filter.JwtAuthorizationFilter;
 import com.sua.authserver.global.filter.JwtFilter;
 import com.sua.authserver.global.filter.VerifyMemberFilter;
@@ -23,11 +24,19 @@ public class AuthFilterConfig {
     }
 
     @Bean
+    public FilterRegistrationBean corsFilter() {
+        FilterRegistrationBean<Filter> filterRegistrationBean = new FilterRegistrationBean<>();
+        filterRegistrationBean.setFilter(new CorsFilter());
+        filterRegistrationBean.setOrder(1);
+        return filterRegistrationBean;
+    }
+
+    @Bean
     public FilterRegistrationBean verifyMemberFilter(ObjectMapper mapper, MemberService memberService) {
         FilterRegistrationBean<Filter> filterRegistrationBean = new
                 FilterRegistrationBean<>();
         filterRegistrationBean.setFilter(new VerifyMemberFilter(memberService, mapper));
-        filterRegistrationBean.setOrder(1);
+        filterRegistrationBean.setOrder(2);
         filterRegistrationBean.addUrlPatterns("/login");
         return filterRegistrationBean;
     }
@@ -37,7 +46,7 @@ public class AuthFilterConfig {
         FilterRegistrationBean<Filter> filterRegistrationBean = new
                 FilterRegistrationBean<>();
         filterRegistrationBean.setFilter(new JwtFilter(provider, memberService , mapper));
-        filterRegistrationBean.setOrder(2);
+        filterRegistrationBean.setOrder(3);
         filterRegistrationBean.addUrlPatterns("/login");
         return filterRegistrationBean;
     }
@@ -47,7 +56,7 @@ public class AuthFilterConfig {
         FilterRegistrationBean<Filter> filterRegistrationBean = new
                 FilterRegistrationBean<>();
         filterRegistrationBean.setFilter(new JwtAuthorizationFilter(provider,mapper));
-        filterRegistrationBean.setOrder(2);
+        filterRegistrationBean.setOrder(3);
         filterRegistrationBean.addUrlPatterns("/login");
         return filterRegistrationBean;
     }
