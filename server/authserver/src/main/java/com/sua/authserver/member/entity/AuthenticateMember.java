@@ -12,5 +12,5 @@ import java.util.Set;
 @ToString
 public class AuthenticateMember {
     private String loginId;
-    private Role role;
+    private Set<Role> roles;
 }

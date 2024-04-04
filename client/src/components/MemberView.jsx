@@ -4,8 +4,8 @@ const MemberView = () => {
   const [member, setMember] = useState(null);
 
   useEffect(() => {
-    const dummyMember = { id: 1, name: 'John Doe', email: 'john@example.com' };
-    setMember(dummyMember);
+    // const member = { id: 1, name: 'John Doe', email: 'john@example.com' };
+    setMember(member);
   }, []);
 
   return (

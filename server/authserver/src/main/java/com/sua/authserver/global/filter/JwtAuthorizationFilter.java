@@ -4,9 +4,12 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sua.authserver.global.exception.AuthorizationException;
+import com.sua.authserver.global.jwt.Jwt;
 import com.sua.authserver.global.jwt.JwtProvider;
 import com.sua.authserver.member.constant.Role;
+import com.sua.authserver.member.dto.MemberLoginResponseDto;
 import com.sua.authserver.member.entity.AuthenticateMember;
+import com.sua.authserver.member.service.MemberService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
@@ -19,19 +22,24 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.PatternMatchUtils;
+import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Enumeration;
+import java.util.List;
 
 @RequiredArgsConstructor
 @Slf4j
 public class JwtAuthorizationFilter implements Filter {
 
-    private final String[] whiteListUris = new String[]{"/members", "/members/duplicate-check", "/members/signup", "/auth/refresh/token", "/member/**"};
+    private final String[] whiteListUris = new String[]{"/main", "/members/duplicate-check", "/signup", "/login", "/auth/refresh/token", "/member/**"};
 
     private final JwtProvider jwtProvider;
 
     private final ObjectMapper objectMapper;
+
+    private final MemberService memberService;
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
@@ -64,7 +72,7 @@ public class JwtAuthorizationFilter implements Filter {
             String token = getToken(httpServletRequest);
             AuthenticateMember authenticateMember = getAuthenticateMember(token);
             verifyAuthorization(httpServletRequest.getRequestURI(), authenticateMember);
-            log.info("loginId : {}", authenticateMember.getLoginId());
+
             chain.doFilter(request, response);
         } catch (JsonParseException e) {
             log.error("JsonParseException");
@@ -104,7 +112,7 @@ public class JwtAuthorizationFilter implements Filter {
     }
 
     private void verifyAuthorization(String uri, AuthenticateMember member) {
-        if (PatternMatchUtils.simpleMatch("*/admin*", uri) && member.getRole() != Role.ADMIN) {
+        if (PatternMatchUtils.simpleMatch("*/admin*", uri) && !member.getRoles().contains(Role.ADMIN)) {
             throw new AuthorizationException();
         }
     }
