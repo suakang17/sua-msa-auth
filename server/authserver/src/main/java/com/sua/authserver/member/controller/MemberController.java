@@ -4,6 +4,7 @@ import com.sua.authserver.global.jwt.Jwt;
 import com.sua.authserver.member.dto.*;
 
 import com.sua.authserver.member.service.MemberService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,8 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 public class MemberController {
     private final MemberService memberService;
+    public static final String LOGIN_ID = "loginid";
+
 
     @GetMapping("/main")
     public ResponseEntity<String> mainPage() {
@@ -39,8 +42,12 @@ public class MemberController {
     }
 
     @GetMapping("/member")
-    public ResponseEntity memberPage() {
-        return new ResponseEntity(HttpStatus.OK);
+    public ResponseEntity memberPage(HttpServletRequest request) {
+        String loginId = (String) request.getAttribute(LOGIN_ID);
+        log.info("loginId={}", loginId);
+        MemberLoginResponseDto memberByLoginId = memberService.findMemberByLoginId(loginId);
+
+        return ResponseEntity.ok(memberByLoginId);
     }
 
 

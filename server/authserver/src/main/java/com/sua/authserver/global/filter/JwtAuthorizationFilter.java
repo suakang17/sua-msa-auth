@@ -39,7 +39,8 @@ public class JwtAuthorizationFilter implements Filter {
 
     private final ObjectMapper objectMapper;
 
-    private final MemberService memberService;
+    public static final String LOGIN_ID = "loginid";
+
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
@@ -72,6 +73,8 @@ public class JwtAuthorizationFilter implements Filter {
             String token = getToken(httpServletRequest);
             AuthenticateMember authenticateMember = getAuthenticateMember(token);
             verifyAuthorization(httpServletRequest.getRequestURI(), authenticateMember);
+
+            request.setAttribute(LOGIN_ID, authenticateMember.getLoginId());
 
             chain.doFilter(request, response);
         } catch (JsonParseException e) {

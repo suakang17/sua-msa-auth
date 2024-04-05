@@ -36,7 +36,7 @@ const Main = () => {
       }
     })
     .then(response => {
-      navigate('/member');
+      navigate('/member', { state: { responseData: response.data } });
       console.log(response.data);
     })
     .catch(error => {

@@ -52,10 +52,10 @@ public class AuthFilterConfig {
     }
 
     @Bean
-    public FilterRegistrationBean jwtAuthorizationFilter(JwtProvider provider, ObjectMapper mapper, MemberService memberService) {
+    public FilterRegistrationBean jwtAuthorizationFilter(JwtProvider provider, ObjectMapper mapper) {
         FilterRegistrationBean<Filter> filterRegistrationBean = new
                 FilterRegistrationBean<>();
-        filterRegistrationBean.setFilter(new JwtAuthorizationFilter(provider,mapper, memberService));
+        filterRegistrationBean.setFilter(new JwtAuthorizationFilter(provider,mapper));
         filterRegistrationBean.setOrder(2);
         return filterRegistrationBean;
     }
