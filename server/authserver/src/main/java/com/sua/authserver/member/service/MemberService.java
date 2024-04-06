@@ -100,10 +100,12 @@ public class MemberService {
     }
 
     @Transactional
-    public void updateRefreshToken(String memberEmail, String refreshToken) {
-        Member member = memberRepository.findByEmail(memberEmail);
+    public void updateRefreshToken(String loginId, String refreshToken) {
+        Member member = memberRepository.findByLoginId(loginId);
         if (member == null)
             return;
+
+        refreshTokenRepository.setRefreshToken(loginId, refreshToken, jwtProvider.getExpireDateRefreshToken().getTime());
         member.updateRefreshToken(refreshToken);
     }
 
@@ -171,8 +173,6 @@ public class MemberService {
         if (refreshTokenRepository.hasKey(am.getLoginId())) {
             refreshTokenRepository.deleteRefreshToken(am.getLoginId());
         }
-
-        // TODO 회원가입시 refresh는 redis에 저장하도록 변경
 
         refreshTokenRepository.setBlackList(accessToken, "logout", jwtProvider.getExpireDateAccessToken().getTime());
 

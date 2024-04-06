@@ -20,7 +20,7 @@ public class RefreshTokenRepository {
      */
     public void setRefreshToken(String loginId, String refreshToken, long refreshTokenTime) {
         redisTemplate.setValueSerializer(new Jackson2JsonRedisSerializer<>(refreshToken.getClass()));
-//        redisTemplate.opsForValue().set(loginId, refreshToken, minutes, TimeUnit.MINUTES);
+        redisTemplate.opsForValue().set(loginId, refreshToken, refreshTokenTime, TimeUnit.MINUTES);
     }
 
     public String getRefreshToken(String loginId) {
