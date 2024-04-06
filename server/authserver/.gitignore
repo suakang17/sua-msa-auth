@@ -17,6 +17,7 @@ bin/
 !**/src/main/**/bin/
 !**/src/test/**/bin/
 src/main/resources/application-db.properties
+src/main/resources/application-db.yml
 .DS_store
 
 ### IntelliJ IDEA ###

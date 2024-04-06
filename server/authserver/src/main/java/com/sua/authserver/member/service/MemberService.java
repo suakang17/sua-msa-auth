@@ -1,5 +1,6 @@
 package com.sua.authserver.member.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sua.authserver.global.filter.VerifyMemberFilter;
 import com.sua.authserver.global.jwt.Jwt;
 import com.sua.authserver.global.tools.MemberToResponseConverter;
@@ -11,8 +12,11 @@ import com.sua.authserver.member.entity.Member;
 import com.sua.authserver.member.entity.MemberRole;
 import com.sua.authserver.member.repository.MemberRepository;
 import com.sua.authserver.member.repository.MemberRoleRepository;
+import com.sua.authserver.member.repository.RefreshTokenRepository;
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
-import lombok.Builder;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,8 +24,8 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -30,6 +34,7 @@ import java.util.stream.Collectors;
 public class MemberService {
     private final MemberRepository memberRepository;
     private final MemberRoleRepository memberRoleRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     private final JwtProvider jwtProvider;
 
@@ -154,5 +159,22 @@ public class MemberService {
                 .isAdmin(member.getMemberRoles().contains(Role.ADMIN))
                 .birth(member.getBirth())
                 .build();
+    }
+
+    public void logout(HttpServletRequest request) throws JsonProcessingException {
+        String accessToken = jwtProvider.getToken(request);
+        ObjectMapper mapper = new ObjectMapper();
+
+        String member = jwtProvider.getClaims(accessToken).get("authenticateMember", String.class);
+        AuthenticateMember am = mapper.readValue(member, AuthenticateMember.class);
+
+        if (refreshTokenRepository.hasKey(am.getLoginId())) {
+            refreshTokenRepository.deleteRefreshToken(am.getLoginId());
+        }
+
+        // TODO 회원가입시 refresh는 redis에 저장하도록 변경
+
+        refreshTokenRepository.setBlackList(accessToken, "logout", jwtProvider.getExpireDateAccessToken().getTime());
+
     }
 }

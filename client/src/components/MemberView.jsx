@@ -1,30 +1,41 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const handleLogout = () => {
-  axios.post('/logout').then(() => {
-      console.log('로그아웃 성공');
-      localStorage.removeItem('accesstoken');
-      localStorage.removeItem('refreshtoken');
-    }).catch(error => {
-      console.error('로그아웃 실패', error);
-    });
-}
-
-const handleModify = () => {
-  // axios.post('/logout').then(() => {
-  //   console.log('로그아웃 성공');
-  //   localStorage.removeItem('accesstoken');
-  //   localStorage.removeItem('refreshtoken');
-  // }).catch(error => {
-  //   console.error('로그아웃 실패', error);
-  // });
-}
 
 const MemberView = () => {
   const [member, setMember] = useState(null);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    
+    try {
+      const response = await axios.post('http://localhost:8080/logout' , member, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('accesstoken')}` // 토큰을 헤더에 포함
+        }
+      });
+      if (response.status === 200) {
+        localStorage.removeItem('accesstoken');
+        localStorage.removeItem('refreshtoken');
+        console.log('로그아웃 성공');
+        navigate('/main');
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+  
+  const handleModify = () => {
+    // axios.post('/logout').then(() => {
+    //   console.log('로그아웃 성공');
+    //   localStorage.removeItem('accesstoken');
+    //   localStorage.removeItem('refreshtoken');
+    // }).catch(error => {
+    //   console.error('로그아웃 실패', error);
+    // });
+  }
 
   useEffect(() => {
     if (location.state && location.state.responseData) {

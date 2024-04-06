@@ -1,5 +1,6 @@
 package com.sua.authserver.member.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sua.authserver.global.jwt.Jwt;
 import com.sua.authserver.member.dto.*;
 
@@ -41,12 +42,16 @@ public class MemberController {
         return new ResponseEntity(HttpStatus.OK);
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity logout(HttpServletRequest request) throws JsonProcessingException {
+        memberService.logout(request);
+        return new ResponseEntity(HttpStatus.OK);
+    }
+
     @GetMapping("/member")
     public ResponseEntity memberPage(HttpServletRequest request) {
         String loginId = (String) request.getAttribute(LOGIN_ID);
-        log.info("loginId={}", loginId);
         MemberLoginResponseDto memberByLoginId = memberService.findMemberByLoginId(loginId);
-
         return ResponseEntity.ok(memberByLoginId);
     }
 
