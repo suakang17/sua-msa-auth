@@ -48,6 +48,11 @@ public class JwtAuthorizationFilter implements Filter {
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
         HttpServletResponse httpServletResponse = (HttpServletResponse) response;
 
+        if (httpServletRequest.getMethod().equals("OPTIONS")) {
+            log.info("preflight return");
+            return;
+        }
+
         Enumeration<String> headerNames = httpServletRequest.getHeaderNames();
         while (headerNames.hasMoreElements()) {
             String headerName = headerNames.nextElement();
@@ -70,7 +75,7 @@ public class JwtAuthorizationFilter implements Filter {
             return;
         }
         try {
-            String token = getToken(httpServletRequest);
+            String token = jwtProvider.getToken(httpServletRequest);
             AuthenticateMember authenticateMember = getAuthenticateMember(token);
             verifyAuthorization(httpServletRequest.getRequestURI(), authenticateMember);
 
@@ -101,11 +106,6 @@ public class JwtAuthorizationFilter implements Filter {
         String authorization = request.getHeader("Authorization");
         log.info("request.getHeaderAuthorization={}", request.getHeader("Authorization"));
         return authorization != null && authorization.startsWith("Bearer ");
-    }
-
-    private String getToken(HttpServletRequest request) {
-        String authorization = request.getHeader("Authorization");
-        return authorization.substring(7);
     }
 
     private AuthenticateMember getAuthenticateMember(String token) throws JsonProcessingException {
