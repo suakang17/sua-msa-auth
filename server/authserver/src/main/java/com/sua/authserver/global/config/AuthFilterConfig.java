@@ -1,6 +1,7 @@
 package com.sua.authserver.global.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sua.authserver.global.filter.CorsFilter;
 import com.sua.authserver.global.filter.JwtAuthorizationFilter;
 import com.sua.authserver.global.filter.JwtFilter;
 import com.sua.authserver.global.filter.VerifyMemberFilter;
@@ -17,10 +18,17 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Configuration
 public class AuthFilterConfig {
 
-
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public FilterRegistrationBean corsFilter() {
+        FilterRegistrationBean<Filter> filterRegistrationBean = new FilterRegistrationBean<>();
+        filterRegistrationBean.setFilter(new CorsFilter());
+        filterRegistrationBean.setOrder(1);
+        return filterRegistrationBean;
     }
 
     @Bean
@@ -28,8 +36,8 @@ public class AuthFilterConfig {
         FilterRegistrationBean<Filter> filterRegistrationBean = new
                 FilterRegistrationBean<>();
         filterRegistrationBean.setFilter(new VerifyMemberFilter(memberService, mapper));
-        filterRegistrationBean.setOrder(1);
-        filterRegistrationBean.addUrlPatterns("/member/login");
+        filterRegistrationBean.setOrder(2);
+        filterRegistrationBean.addUrlPatterns("/login");
         return filterRegistrationBean;
     }
 
@@ -38,8 +46,8 @@ public class AuthFilterConfig {
         FilterRegistrationBean<Filter> filterRegistrationBean = new
                 FilterRegistrationBean<>();
         filterRegistrationBean.setFilter(new JwtFilter(provider, memberService , mapper));
-        filterRegistrationBean.setOrder(2);
-        filterRegistrationBean.addUrlPatterns("/member/login");
+        filterRegistrationBean.setOrder(3);
+        filterRegistrationBean.addUrlPatterns("/login");
         return filterRegistrationBean;
     }
 

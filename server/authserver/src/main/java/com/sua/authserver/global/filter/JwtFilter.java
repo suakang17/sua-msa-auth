@@ -6,12 +6,14 @@ import com.sua.authserver.global.jwt.JwtProvider;
 import com.sua.authserver.member.entity.AuthenticateMember;
 import com.sua.authserver.member.service.MemberService;
 import jakarta.servlet.*;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 
 import java.io.IOException;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,14 +37,14 @@ public class JwtFilter implements Filter {
             Jwt jwt = jwtProvider.createJwt(claims);
             memberService.updateRefreshToken(authenticateMember.getLoginId(), jwt.getRefreshToken());
             String json = objectMapper.writeValueAsString(jwt);
-            HttpServletResponse httpServletResponse = (HttpServletResponse) response;
 
-            httpServletResponse.setHeader("Authorization", "Bearer " + jwt.getAccessToken());
             log.info("jwtAT={}", jwt.getRefreshToken());
             log.info("jwtRT={}", jwt.getAccessToken());
+
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
             response.getWriter().write(json);
+
             filterChain.doFilter(request, response);
             return;
         }

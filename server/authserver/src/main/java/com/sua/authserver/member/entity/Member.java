@@ -35,9 +35,8 @@ public class Member {
     private Gender gender;
     private LocalDate birth;
 
-    @Enumerated(EnumType.STRING)
-    private Role role;
-
+    @OneToMany(mappedBy = "member",cascade = CascadeType.REMOVE, fetch = FetchType.EAGER)
+    private Set<MemberRole> memberRoles = new HashSet<>();
     private String refreshToken;
 
     @Builder
@@ -63,13 +62,12 @@ public class Member {
         this.birth = birth;
     }
 
-    public void setRole(Role role) {
-        this.role = role;
+    public void addRole(MemberRole memberRole){
+        memberRoles.add(memberRole);
     }
-
-
     public void updateRefreshToken(String refreshToken) {
         this.refreshToken = refreshToken;
     }
+
 
 }

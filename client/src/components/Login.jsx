@@ -2,21 +2,34 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import '../styles.css';
 
-const Login = ({ onLogin }) => {
-  const [username, setUsername] = useState('');
+const Login = ({ onLoginHandle }) => {
+  const [loginId, setId] = useState('');
   const [password, setPassword] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const response = await axios.post('http://localhost:8080/login', {
-        username,
+        loginId,
         password,
       });
-      // 로그인에 성공한 경우 상태를 업데이트합니다.
-      onLogin(response.data);
+      console.log(response.data);
+      // 서버에서 반환된 응답에 JWT가 있는지 확인
+      if (response.data) {
+        
+        localStorage.setItem('accesstoken', response.data.accessToken);
+        localStorage.setItem('refreshtoken', response.data.refreshToken);
+        console.log('로그인 성공', response.data.accessToken);
+        
+        onLoginHandle(true);
+      } else {
+        // JWT가 없는 경우 처리
+        console.error('로그인 에러: JWT가 없습니다.');
+        onLoginHandle(false);
+      }
     } catch (error) {
       console.error('로그인 에러:', error);
+      onLoginHandle(false);
     }
   };
 
@@ -26,11 +39,11 @@ const Login = ({ onLogin }) => {
         <h2>Login</h2>
         <form onSubmit={handleSubmit}>
           <div>
-            <label>Username:</label>
+            <label>Id:</label>
             <input
               type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={loginId}
+              onChange={(e) => setId(e.target.value)}
             />
           </div>
           <div>

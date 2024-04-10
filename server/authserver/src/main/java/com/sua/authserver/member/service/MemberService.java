@@ -1,21 +1,22 @@
 package com.sua.authserver.member.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sua.authserver.global.filter.VerifyMemberFilter;
 import com.sua.authserver.global.jwt.Jwt;
 import com.sua.authserver.global.tools.MemberToResponseConverter;
 import com.sua.authserver.member.constant.Role;
-import com.sua.authserver.member.dto.MemberLoginDto;
-import com.sua.authserver.member.dto.MemberRegisterDto;
-import com.sua.authserver.member.dto.MemberVerifyResponseDto;
+import com.sua.authserver.member.dto.*;
 import com.sua.authserver.global.jwt.JwtProvider;
-import com.sua.authserver.member.dto.MemberResponseDto;
 import com.sua.authserver.member.entity.AuthenticateMember;
 import com.sua.authserver.member.entity.Member;
 import com.sua.authserver.member.entity.MemberRole;
 import com.sua.authserver.member.repository.MemberRepository;
 import com.sua.authserver.member.repository.MemberRoleRepository;
+import com.sua.authserver.member.repository.RefreshTokenRepository;
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
-import lombok.Builder;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,8 +24,8 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -33,6 +34,7 @@ import java.util.stream.Collectors;
 public class MemberService {
     private final MemberRepository memberRepository;
     private final MemberRoleRepository memberRoleRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     private final JwtProvider jwtProvider;
 
@@ -54,17 +56,22 @@ public class MemberService {
                 .birth(memberRegisterDto.getBirth())
                 .build();
 
-        newMember.setRole(Role.MEMBER);
+        MemberRole role = MemberRole.builder()
+                .role(Role.MEMBER)
+                .member(newMember)
+                .build();
+        newMember.addRole(role);
 
         log.info("password= {}", memberRegisterDto.getPassword());
-        log.info("genderType={}", memberRegisterDto.getGender().getClass());
+        log.info("role={}", newMember.getMemberRoles().contains(Role.MEMBER));
         memberRepository.save(newMember);
-        memberRepository.save(newMember);
+        memberRoleRepository.save(role);
+
         log.info("complete save");
         return newMember.getId();
     }
 
-    public MemberVerifyResponseDto login(MemberLoginDto memberLoginDto) {
+    public MemberVerifyResponseDto verifyMember(MemberLoginDto memberLoginDto) {
         log.info("memberLoginId={}", memberLoginDto.getLoginId());
         Member member = memberRepository.findByLoginId(memberLoginDto.getLoginId());
         String encodedPassword = (member == null) ? "" : member.getPassword();
@@ -79,8 +86,7 @@ public class MemberService {
             }
             return MemberVerifyResponseDto.builder()
                     .isValid(true)
-                    .role(member.getRole())
-                    .build();
+                    .role(member.getMemberRoles().stream().map(MemberRole::getRole).collect(Collectors.toSet())).build();
         } else {
             log.info("member is empty");
             return MemberVerifyResponseDto.builder()
@@ -89,64 +95,86 @@ public class MemberService {
         }
     }
 
-    @Transactional
-    public boolean changeMemberRole(String loginId, Role role) {
-        Member member = memberRepository.findByLoginId(loginId);
-        if (member == null) return false;
+    public MemberResponseDto findMemberByEmail(String memberEmail) {
+        return converter.convert(memberRepository.findByEmail(memberEmail));
+    }
 
-        if (member.getRole() == Role.MEMBER) {
-            member.setRole(Role.ADMIN);
-        } else {
-            member.setRole(Role.MEMBER);
-        }
+    @Transactional
+    public void updateRefreshToken(String loginId, String refreshToken) {
+        Member member = memberRepository.findByLoginId(loginId);
+        if (member == null)
+            return;
+
+        refreshTokenRepository.setRefreshToken(loginId, refreshToken, jwtProvider.getExpireDateRefreshToken().getTime());
+        member.updateRefreshToken(refreshToken);
+    }
+
+    @Transactional
+    public boolean addMemberRole(String email, Role role) {
+        Member member = memberRepository.findByEmail(email);
+        if (member.getMemberRoles().stream().anyMatch(memberRole -> memberRole.getRole().equals(role)))
+            return false;
+        MemberRole memberRole = MemberRole.builder()
+                .member(member)
+                .role(role)
+                .build();
+        member.addRole(memberRole);
+        memberRoleRepository.save(memberRole);
         return true;
     }
 
-    public MemberResponseDto findMemberByEmail(String MemberEmail) {
-        return converter.convert(memberRepository.findByMemberEmail(MemberEmail));
-    }
-
     @Transactional
-    public void updateRefreshToken(String MemberEmail, String refreshToken) {
-        Member member = memberRepository.findByMemberEmail(MemberEmail);
-        if (member == null)
-            return;
-        member.updateRefreshToken(refreshToken);
-    }
-//
-//    @Transactional
-//    public Jwt refreshToken(String refreshToken) {
-//        try {
-//            // 유효한 토큰 인지 검증
-//            jwtProvider.getClaims(refreshToken);
-//            Member Member = memberRepository.findByRefreshToken(refreshToken);
-//            if (Member == null)
-//                return null;
-//
-//            HashMap<String, Object> claims = new HashMap<>();
-//            AuthenticateMember authenticateMember = new AuthenticateMember(Member.getMemberEmail(),
-//                    member.getMemberRoles().stream().map(MemberRole::getRole).collect(Collectors.toSet()));
-//            String authenticateMemberJson = objectMapper.writeValueAsString(authenticateMember);
-//            claims.put(VerifyMemberFilter.AUTHENTICATE_Member, authenticateMemberJson);
-//            Jwt jwt = jwtProvider.createJwt(claims);
-//            updateRefreshToken(Member.getMemberEmail(), jwt.getRefreshToken());
-//            return jwt;
-//        } catch (Exception e) {
-//            return null;
-//        }
-//    }
+    public Jwt refreshToken(String refreshToken){
+        try{
+            jwtProvider.getClaims(refreshToken);
+            Member member = memberRepository.findByRefreshToken(refreshToken);
+            if(member == null)
+                return null;
 
-//    @Transactional
-//    public boolean addMemberRole(String email, Role role) {
-//        Member member = memberRepository.findByMemberEmail(email);
-//        if (member.getMemberRoles().stream().anyMatch(memberRole -> memberRole.getRole().equals(role)))
-//            return false;
-//        MemberRole memberRole = MemberRole.builder()
-//                .member(member)
-//                .role(role)
-//                .build();
-//        member.addRole(memberRole);
-//        memberRoleRepository.save(memberRole);
-//        return true;
-//    }
+            HashMap<String, Object> claims = new HashMap<>();
+            AuthenticateMember authenticateMember = new AuthenticateMember(member.getLoginId(),
+                    member.getMemberRoles().stream().map(MemberRole::getRole).collect(Collectors.toSet()));
+            String authenticateUserJson = objectMapper.writeValueAsString(authenticateMember);
+            claims.put(VerifyMemberFilter.AUTHENTICATE_MEMBER,authenticateUserJson);
+            Jwt jwt = jwtProvider.createJwt(claims);
+            updateRefreshToken(member.getEmail(),jwt.getRefreshToken());
+            return jwt;
+        } catch (Exception e){
+            return null;
+        }
+    }
+
+    public AuthenticateMember login(MemberLoginDto loginDto) {
+        Member member = memberRepository.findByLoginId(loginDto.getLoginId());
+        return new AuthenticateMember(member.getLoginId(), member.getMemberRoles().stream().map(MemberRole::getRole).collect(Collectors.toSet()));
+    }
+
+    public MemberLoginResponseDto findMemberByLoginId(String loginId) {
+        Member member = memberRepository.findByLoginId(loginId);
+
+        return MemberLoginResponseDto.builder()
+                .id(member.getId())
+                .loginId(member.getLoginId())
+                .name(member.getName())
+                .email(member.getEmail())
+                .gender(member.getGender())
+                .isAdmin(member.getMemberRoles().contains(Role.ADMIN))
+                .birth(member.getBirth())
+                .build();
+    }
+
+    public void logout(HttpServletRequest request) throws JsonProcessingException {
+        String accessToken = jwtProvider.getToken(request);
+        ObjectMapper mapper = new ObjectMapper();
+
+        String member = jwtProvider.getClaims(accessToken).get("authenticateMember", String.class);
+        AuthenticateMember am = mapper.readValue(member, AuthenticateMember.class);
+
+        if (refreshTokenRepository.hasKey(am.getLoginId())) {
+            refreshTokenRepository.deleteRefreshToken(am.getLoginId());
+        }
+
+        refreshTokenRepository.setBlackList(accessToken, "logout", jwtProvider.getExpireDateAccessToken().getTime());
+
+    }
 }

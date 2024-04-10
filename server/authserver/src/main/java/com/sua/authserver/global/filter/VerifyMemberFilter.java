@@ -11,10 +11,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.Enumeration;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -40,7 +40,7 @@ public class VerifyMemberFilter implements Filter {
                 MemberLoginDto memberLoginDto = objectMapper.readValue(stringReader, MemberLoginDto.class);
                 log.info("memberLoginDto={}", memberLoginDto.getLoginId());
 
-                MemberVerifyResponseDto memberVerifyResponseDto = memberService.login(memberLoginDto);
+                MemberVerifyResponseDto memberVerifyResponseDto = memberService.verifyMember(memberLoginDto);
 
                 log.info("memberVerifyResponseDto.isNull?={}", memberVerifyResponseDto == null);
                 assert memberVerifyResponseDto != null;
@@ -48,7 +48,6 @@ public class VerifyMemberFilter implements Filter {
 
                 if (memberVerifyResponseDto.isValid()) {
                     request.setAttribute(AUTHENTICATE_MEMBER, new AuthenticateMember(memberLoginDto.getLoginId(), memberVerifyResponseDto.getRole()));
-
                 } else {
                     throw new IllegalArgumentException();
                 }

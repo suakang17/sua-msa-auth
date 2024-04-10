@@ -1,14 +1,47 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+
 
 const MemberView = () => {
   const [member, setMember] = useState(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    
+    try {
+      const response = await axios.post('http://localhost:8080/logout' , member, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('accesstoken')}` // 토큰을 헤더에 포함
+        }
+      });
+      if (response.status === 200) {
+        localStorage.removeItem('accesstoken');
+        localStorage.removeItem('refreshtoken');
+        console.log('로그아웃 성공');
+        navigate('/main');
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+  
+  const handleModify = () => {
+    // axios.post('/logout').then(() => {
+    //   console.log('로그아웃 성공');
+    //   localStorage.removeItem('accesstoken');
+    //   localStorage.removeItem('refreshtoken');
+    // }).catch(error => {
+    //   console.error('로그아웃 실패', error);
+    // });
+  }
 
   useEffect(() => {
-    // 여기서는 실제로 서버에서 특정 회원의 정보를 가져오는 API를 호출할 것입니다.
-    // 이 예시에서는 더미 데이터를 사용하여 회원 정보를 설정합니다.
-    const dummyMember = { id: 1, name: 'John Doe', email: 'john@example.com' };
-    setMember(dummyMember);
-  }, []);
+    if (location.state && location.state.responseData) {
+      setMember(location.state.responseData);
+    }
+  }, [location.state]);
 
   return (
     <div>
@@ -16,12 +49,17 @@ const MemberView = () => {
       <h3>Member Information</h3>
       {member ? (
         <div>
-          <p>ID: {member.id}</p>
+          <p>ID: {member.loginId}</p>
           <p>Name: {member.name}</p>
           <p>Email: {member.email}</p>
+          <p>Birth: {member.birth[0]}.{member.birth[1]}.{member.birth[2]}</p>
+          <p>Gender: {member.gender}</p>
+          <button onClick={handleLogout}>Logout</button>
+          <button onClick={handleModify}>수정</button>
         </div>
+        
       ) : (
-        <p>Loading...</p>
+        <p>No member information available.</p>
       )}
     </div>
   );

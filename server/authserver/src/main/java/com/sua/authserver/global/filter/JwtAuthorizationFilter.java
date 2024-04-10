@@ -4,9 +4,12 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sua.authserver.global.exception.AuthorizationException;
+import com.sua.authserver.global.jwt.Jwt;
 import com.sua.authserver.global.jwt.JwtProvider;
 import com.sua.authserver.member.constant.Role;
+import com.sua.authserver.member.dto.MemberLoginResponseDto;
 import com.sua.authserver.member.entity.AuthenticateMember;
+import com.sua.authserver.member.service.MemberService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
@@ -19,25 +22,36 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.PatternMatchUtils;
+import org.springframework.web.util.ContentCachingResponseWrapper;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Enumeration;
+import java.util.List;
 
 @RequiredArgsConstructor
 @Slf4j
 public class JwtAuthorizationFilter implements Filter {
 
-    private final String[] whiteListUris = new String[]{"/members", "/members/duplicate-check", "/members/signup", "/auth/refresh/token", "/member/**"};
+    private final String[] whiteListUris = new String[]{"/main", "/members/duplicate-check", "/signup", "/login", "/auth/refresh/token", "/member/**"};
 
     private final JwtProvider jwtProvider;
 
     private final ObjectMapper objectMapper;
+
+    public static final String LOGIN_ID = "loginid";
+
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         log.info("on JwtAuthorizationFilter");
         HttpServletRequest httpServletRequest = (HttpServletRequest) request;
         HttpServletResponse httpServletResponse = (HttpServletResponse) response;
+
+        if (httpServletRequest.getMethod().equals("OPTIONS")) {
+            log.info("preflight return");
+            return;
+        }
 
         Enumeration<String> headerNames = httpServletRequest.getHeaderNames();
         while (headerNames.hasMoreElements()) {
@@ -61,10 +75,12 @@ public class JwtAuthorizationFilter implements Filter {
             return;
         }
         try {
-            String token = getToken(httpServletRequest);
+            String token = jwtProvider.getToken(httpServletRequest);
             AuthenticateMember authenticateMember = getAuthenticateMember(token);
             verifyAuthorization(httpServletRequest.getRequestURI(), authenticateMember);
-            log.info("loginId : {}", authenticateMember.getLoginId());
+
+            request.setAttribute(LOGIN_ID, authenticateMember.getLoginId());
+
             chain.doFilter(request, response);
         } catch (JsonParseException e) {
             log.error("JsonParseException");
@@ -92,11 +108,6 @@ public class JwtAuthorizationFilter implements Filter {
         return authorization != null && authorization.startsWith("Bearer ");
     }
 
-    private String getToken(HttpServletRequest request) {
-        String authorization = request.getHeader("Authorization");
-        return authorization.substring(7);
-    }
-
     private AuthenticateMember getAuthenticateMember(String token) throws JsonProcessingException {
         Claims claims = jwtProvider.getClaims(token);
         String authenticateMemberJson = claims.get(VerifyMemberFilter.AUTHENTICATE_MEMBER, String.class);
@@ -104,7 +115,7 @@ public class JwtAuthorizationFilter implements Filter {
     }
 
     private void verifyAuthorization(String uri, AuthenticateMember member) {
-        if (PatternMatchUtils.simpleMatch("*/admin*", uri) && member.getRole() != Role.ADMIN) {
+        if (PatternMatchUtils.simpleMatch("*/admin*", uri) && !member.getRoles().contains(Role.ADMIN)) {
             throw new AuthorizationException();
         }
     }

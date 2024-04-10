@@ -3,6 +3,7 @@ package com.sua.authserver.global.jwt;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -40,7 +41,6 @@ public class JwtProvider {
                 .getBody();
     }
 
-
     public Date getExpireDateAccessToken() {
         long expireTimeMils = 1000 * 60 * 60;
         return new Date(System.currentTimeMillis() + expireTimeMils);
@@ -50,4 +50,10 @@ public class JwtProvider {
         long expireTimeMils = 1000L * 60 * 60 * 24 * 60;
         return new Date(System.currentTimeMillis() + expireTimeMils);
     }
+
+    public String getToken(HttpServletRequest request) {
+        String authorization = request.getHeader("Authorization");
+        return authorization.substring(7);
+    }
+
 }
