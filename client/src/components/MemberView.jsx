@@ -11,7 +11,7 @@ const MemberView = () => {
   const handleLogout = async () => {
     
     try {
-      const response = await axios.post('http://localhost:8080/logout' , member, {
+      const response = await axios.post('http://localhost:8080/api/v1/members/logout' , member, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('accesstoken')}` // 토큰을 헤더에 포함
         }

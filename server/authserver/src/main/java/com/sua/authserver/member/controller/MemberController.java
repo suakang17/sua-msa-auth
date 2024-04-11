@@ -13,7 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping
+@RequestMapping("/api/v1/members")
 @RequiredArgsConstructor
 @Slf4j
 public class MemberController {
@@ -48,7 +48,7 @@ public class MemberController {
         return new ResponseEntity(HttpStatus.OK);
     }
 
-    @GetMapping("/member")
+    @GetMapping()
     public ResponseEntity memberPage(HttpServletRequest request) {
         String loginId = (String) request.getAttribute(LOGIN_ID);
         MemberLoginResponseDto memberByLoginId = memberService.findMemberByLoginId(loginId);

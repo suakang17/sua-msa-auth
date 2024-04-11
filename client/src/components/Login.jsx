@@ -9,7 +9,7 @@ const Login = ({ onLoginHandle }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:8080/login', {
+      const response = await axios.post('http://localhost:8080/api/v1/members/login', {
         loginId,
         password,
       });

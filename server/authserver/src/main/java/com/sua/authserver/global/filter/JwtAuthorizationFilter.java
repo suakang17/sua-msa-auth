@@ -33,7 +33,7 @@ import java.util.List;
 @Slf4j
 public class JwtAuthorizationFilter implements Filter {
 
-    private final String[] whiteListUris = new String[]{"/main", "/members/duplicate-check", "/signup", "/login", "/auth/refresh/token", "/member/**"};
+    private final String[] whiteListUris = new String[]{"/main", "/members/duplicate-check", "/api/v1/members/signup", "/login", "/auth/refresh/token", "/member/**"};
 
     private final JwtProvider jwtProvider;
 

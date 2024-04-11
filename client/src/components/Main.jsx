@@ -30,7 +30,7 @@ const Main = () => {
     } else {
       
       console.log('member');
-      axios.get('http://localhost:8080/member', {
+      axios.get('http://localhost:8080/api/v1/members/member', {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('accesstoken')}` // 토큰을 헤더에 포함
       }
